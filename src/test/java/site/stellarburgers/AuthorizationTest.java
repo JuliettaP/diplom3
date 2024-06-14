@@ -1,6 +1,7 @@
 package site.stellarburgers;
 
 import io.qameta.allure.junit4.DisplayName;
+import io.restassured.response.ValidatableResponse;
 import junitparams.JUnitParamsRunner;
 import org.junit.*;
 import org.junit.runner.RunWith;
@@ -10,6 +11,7 @@ import static com.codeborne.selenide.Selenide.*;
 import static site.stellarburgers.Browser.browserChoice;
 import static site.stellarburgers.Browser.closeBrowser;
 import static site.stellarburgers.generator.UserGenerator.*;
+import site.stellarburgers.client.*;
 
 @RunWith(JUnitParamsRunner.class)
 @DisplayName("Авторизация")
@@ -23,33 +25,42 @@ public class AuthorizationTest {
 
     String newEmail;
 
+    String token = "";
+
     @BeforeClass
     public static void beforeAll() {
         browserChoice();
     }
 
+    public void registerTestUser() {
+        newEmail = getNewRandomEmail();
+        RegisterUser registerData = new RegisterUser(newEmail, DEFAULT_PASSWORD, DEFAULT_NAME);
+        ValidatableResponse responseRegister = UserClient.registerUser(registerData);
+        token = responseRegister.extract().path("accessToken");
+    }
+
+    public void deleteTestUser()
+    {
+        if (!token.isEmpty())
+            UserClient.deleteUser(token);
+    }
+
     @Before
     public void setUp() {
-        // предварительно регистрируем юзера, различные варианты авторизации которого будем в дальнейшем тестирорвать
-        mainPage = open(MainPage.MAIN_PAGE_URL, MainPage.class);
-        mainPage.clickSignInButton();
+        // перед каждым тестов регистрируем тестового пользователя с использованием прямого вызова API
+        registerTestUser();
 
+        mainPage = open(MainPage.MAIN_PAGE_URL, MainPage.class);
         loginPage = page(LoginPage.class);
-        loginPage.clickRegisterLink();
-
         registrationPage = page(RegistrationPage.class);
-
-        newEmail = getNewRandomEmail();
-        registrationPage.register(DEFAULT_NAME, newEmail, DEFAULT_PASSWORD);
-
-        mainPage = open(MainPage.MAIN_PAGE_URL, MainPage.class);
-
         passwordRecoveryPage = page(PasswordRecoveryPage.class);
         personalAccountPage = page(PersonalAccountPage.class);
     }
 
     @After
-    public void tearDown(){
+    public void tearDown() {
+        // по завершении каждого теста удаляем созданного тестового пользователя через API
+        deleteTestUser();
         clearBrowserLocalStorage();
     }
 

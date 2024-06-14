@@ -41,6 +41,10 @@ public class SectionsTest {
 
     @Test
     public void bunTabValidWorking() {
+        // поскольку сразу после прогрузки страницы владка Булки некликабельна (выделена по умолчанию),
+        // то мы сначала переходим на вкладку Соусы, а с нее уже тестируем переход на вкладку Булки
+        constructorPage.clickSauceTab();
+        constructorPage.clickBunTab();
         Assert.assertTrue(constructorPage.checkIsBunTabSelected());
     }
 

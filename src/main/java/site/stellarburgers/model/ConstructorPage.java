@@ -27,6 +27,10 @@ public class ConstructorPage {
         FILLING_TAB.click();
     }
 
+    public void clickBunTab() {
+        BUN_TAB.click();
+    }
+
     public boolean checkIsBunTabSelected() {
         return BUN_TAB.getAttribute("class").contains("current");
     }
